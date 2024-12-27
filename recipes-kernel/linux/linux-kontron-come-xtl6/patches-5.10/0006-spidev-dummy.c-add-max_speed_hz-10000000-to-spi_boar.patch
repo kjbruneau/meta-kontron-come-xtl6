@@ -1,0 +1,26 @@
+From f4602741ed0c11d2efbfb1f14376fa91a989db40 Mon Sep 17 00:00:00 2001
+From: Mikhail Vanyulin <mvanyulin@dev.rtsoft.ru>
+Date: Thu, 22 Jul 2021 17:03:47 +0300
+Subject: [PATCH 6/7] spidev-dummy.c: add max_speed_hz = 10000000 to
+ spi_board_info
+
+    With this keapi calls start to work
+---
+ drivers/spi/spidev-dummy.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/spi/spidev-dummy.c b/drivers/spi/spidev-dummy.c
+index 6fdd80b582f1..96dff8b09b92 100644
+--- a/drivers/spi/spidev-dummy.c
++++ b/drivers/spi/spidev-dummy.c
+@@ -8,6 +8,7 @@ static struct spi_board_info spidev_dummy_board_info[] = {
+ 	 .modalias = "spidev",
+ 	 .bus_num = 0,
+ 	 .chip_select = 0,
++	 .max_speed_hz = 1000000,
+ 	 },
+ };
+ static struct spi_device *spi_devices[ARRAY_SIZE(spidev_dummy_board_info)];
+-- 
+2.17.1
+

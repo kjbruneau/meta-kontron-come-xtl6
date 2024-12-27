@@ -1,0 +1,7 @@
+define KMACHINE kontron-come-xtl6-64
+define KTYPE standard
+define KARCH x86_64
+
+kconf non-hardware ktypes/standard/standard.cfg
+
+include kontron-come-xtl6-64.scc

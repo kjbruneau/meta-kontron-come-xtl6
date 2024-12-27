@@ -1,0 +1,310 @@
+This README file contains information on building the meta-kontron-come-xtl6
+BSP layer, and booting the images contained in the build directory. Please see
+the corresponding sections below for details.
+
+The BSP is made for Kontron COMe Modules - particularly this version has been
+optimized and tested on systems with the 11th Generation Intel® Core™
+processor like the COMe-xTL6.
+
+We try to include some kind of compatibility with other COMe products where
+possible. Therefore also patches and kernel drivers might be included that are
+not absolutely necessary for for the product it is released for. This should
+allow a smoth migration path between different module products.
+
+Further information about available Kontron COMe products can be found here:
+
+  https://www.kontron.com/products/boards-and-standard-form-factors/com-express/
+
+Information on all Kontron products can be found here:
+
+  http://www.kontron.com/products/
+
+
+Compliance
+==========
+
+No steps have been taken to make this BSP compliant with the Yocto Project
+requirements, which are listed here:
+
+  https://www.yoctoproject.org/webform/yocto-project-compatible-registration
+
+
+Dependencies
+============
+
+This layer depends on:
+
+  URI: git://git.openembedded.org/bitbake
+  branch: honister
+
+  URI: git://git.yoctoproject.org/poky.git
+  branch: honister
+
+  URI: git://git.openembedded.org/openembedded-core
+  layers: meta
+  branch: honister
+
+  URI: git://git.yoctoproject.org/meta-intel
+  layers: intel
+  branch: honister
+
+  URI: git://git.yoctoproject.org/meta-security
+  branch: honister
+
+  URI: git://github.com/kraj/meta-clang
+  branch: honister
+
+
+Table of Contents
+=================
+
+   I. Layer description
+  II. Building the meta-kontron-come-xtl6 BSP layer
+ III. Booting the BSP live images
+  IV. Installation to persistent storage
+
+I. Layer description
+====================
+
+This layer is based:
+
+ - on the Intel common BSP layer
+
+ - on the OpenEmbedded Layer
+
+ - on the latest meta-kontron BSP layer, which is provided along with this
+   layer.
+
+a. Additional kernel drivers and userspace fixes:
+
+ - Add a KEM PLD driver for CPLD functionality support;
+ - Add a Kontron EEPROM driver;
+ - Add a Kontron bootcounter driver;
+ - Add a Kontron backlight driver;
+ - Add a SPI glue driver to bind a spidev driver;
+ - Enable in kernel following drivers and features:
+    * NCT7802 HWMon sensor;
+    * ACPI (i2c-scmi) SMBus drivers;
+    * USB OTG;
+    * NVME;
+    * virtualization (KVM and IOMMU);
+    * eMMC and SD;
+    * HDA Audio;
+    * PPS Generator;
+    * Watchdog pretimeout;
+    * Hibernation to disk(S4) feature;
+    * TPM2.0 driver;
+    * 'powersave' and 'userspace' cpufreq governors;
+ - Disable iTCO watchdog and i801 SMBus drivers.
+
+b. KEAPIv3 support:
+
+The KEAPI library provides unified interface to hardware drivers and
+OS-independent API to get platform information. KEAPI is distributed as source
+code with the code available from github:
+
+  https://github.com/kontron/keapi
+
+c. Multilib support:
+
+By default only 64-bit set of system C library is included into the final
+bootable BSP image. The support of x86 architecture(32-bit libraries) can be
+enabled to by adding or uncommenting out the following lines in
+meta-kontron-come-xtl6/conf/machine/kontron-come-xtl6.conf :
+
+ require conf/multilib.conf
+ MULTILIBS = "multilib:lib32"
+ DEFAULTTUNE_virtclass-multilib-lib32 = "x86"
+
+Additional 32-bit libraries and utilities can be integrated into bootable BSP
+images by adding them to local.conf, e.g.:
+
+  IMAGE_INSTALL_append = " lib32-libstdc++"
+
+For additional information about multilib support, please refer to:
+
+  https://www.yoctoproject.org/docs/3.1/dev-manual/dev-manual.html#combining-multiple-versions-library-files-into-one-image
+
+II. Building the meta-kontron-come-xtl6 BSP layer
+=================================================
+
+a. Download Yocto release 3.4:
+
+  wget http://downloads.yoctoproject.org/releases/yocto/yocto-3.4/poky-f6d1126fff213460dc6954a5d5fc168606d76b66.tar.bz2
+
+b. Download Intel® Common Core BSP
+
+  wget http://downloads.yoctoproject.org/releases/yocto/yocto-3.4/meta-intel-90170cf85fe35b4e8dc00eee50053c0205276b63.tar.bz2
+
+c. Unpack Yocto poky tarball and go to poky directory:
+
+  tar xf poky-f6d1126fff213460dc6954a5d5fc168606d76b66.tar.bz2
+  cd poky
+
+d. Get collection of OpenEmbedded, security and clang layers:
+
+  wget http://downloads.yoctoproject.org/releases/yocto/yocto-3.4/meta-openembedded-f2152d79043601eacb70da1a3ab36f5ac56f3e28.tar.bz2
+  wget http://git.yoctoproject.org/cgit.cgi/meta-security/snapshot/fb77606aef461910db4836bad94d75758cc2688c.tar.bz2
+  wget https://github.com/kraj/meta-clang/archive/fc5389393adb005b519e488e9e6be4fc5791239c.zip
+
+e. Unpack other layers tarballs. Use following commands for example:
+
+  tar xf ../meta-intel-90170cf85fe35b4e8dc00eee50053c0205276b63.tar.bz2
+  tar xf../yocto-bsp-*/come-xtl6-yocto-bsp_honister-26.0.0.tar.gz
+  tar xf meta-openembedded-f2152d79043601eacb70da1a3ab36f5ac56f3e28.tar.bz2
+  tar xf fb77606aef461910db4836bad94d75758cc2688c.tar.bz2
+  unzip fc5389393adb005b519e488e9e6be4fc5791239c.zip
+
+f. Rename the folders with unpacked layers:
+
+  mv fb77606aef461910db4836bad94d75758cc2688c meta-security
+  mv meta-clang-fc5389393adb005b519e488e9e6be4fc5791239c meta-clang
+
+g. Install a "Build" module for perl. For example:
+  Directly through cpan:
+  $ sudo cpan
+  $ install Module::Build
+  Or by package managers for Fedora linux:
+  $ sudo dnf install perl-Module-Build
+  For Ubuntu linux:
+  $ sudo apt-get install libmodule-build-perl
+
+h. Run oe-init-build-env script:
+
+  source oe-init-build-env
+
+  If available, the sample configuration can be used. In this case the steps i
+  and j can be skipped for a default image configuration.
+
+  TEMPLATECONF=meta-kontron-come-xtl6/conf/ source oe-init-build-env
+
+i. Then change MACHINE to "kontron-come-xtl6-64" in conf/local.conf:
+
+  MACHINE = "kontron-come-xtl6-64"
+
+j. Add paths to meta-intel, meta-security, meta-clang, meta-kontron and
+meta-kontron-come-xtl6 layers to conf/bblayers.conf.
+Corresponding section of the file should look like this:
+
+  BBLAYERS ?= " \
+    /full/path/to/poky/meta \
+    /full/path/to/poky/meta-poky \
+    /full/path/to/poky/meta-yocto-bsp \
+    /full/path/to/poky/meta-openembedded/meta-filesystems \
+    /full/path/to/poky/meta-openembedded/meta-gnome \
+    /full/path/to/poky/meta-openembedded/meta-multimedia \
+    /full/path/to/poky/meta-openembedded/meta-networking \
+    /full/path/to/poky/meta-openembedded/meta-oe \
+    /full/path/to/poky/meta-openembedded/meta-perl \
+    /full/path/to/poky/meta-openembedded/meta-python \
+    /full/path/to/poky/meta-openembedded/meta-security \
+    /full/path/to/poky/meta-openembedded/meta-xfce \
+    /full/path/to/meta-security \
+    /full/path/to/meta-security/meta-tpm \
+    /full/path/to/meta-intel \
+    /full/path/to/meta-clang \
+    /full/path/to/poky/meta-kontron \
+    /full/path/to/poky/meta-kontron-come-xtl6 \
+    "
+
+k. To integrate a hardware video acceleration via gstreamer into the bootable
+images, add a "commercial" license to LICENSE_FLAGS_WHITELIST in
+conf/local.conf:
+
+  LICENSE_FLAGS_WHITELIST = " commercial"
+
+The reason this is needed is to prevent the image from including anything that
+might violate the license terms of the packages used to implement the video
+acceleration feature, such as gst-ffmpeg and ffmpeg. As always, please consult
+the licenses included in the specific packages for details.
+
+l. Run image build (it's possible to build kontron-test-image, core-image-sato
+or some other image):
+
+  bitbake kontron-test-image
+
+###############################################################################
+# WARNING: The kontron-test-image is for product evaluation and testing!      #
+#          It does not incorporate any security features and is accessible    #
+#          through the network, graphical interface and serial console as     #
+#          root without password.                                             #
+#          Never use this image in an untrusted environment!                  #
+###############################################################################
+
+
+III. Installing and booting the BSP live images
+===============================================
+
+The image created using the previous steps can be found in the following
+directory:
+
+  build/tmp/deploy/images
+
+A pre-built version of the image for particular BSP should be also available
+separately on the Kontron customer section:
+
+  https://emdcustomersection.kontron.com
+
+The image can be deployed to a mass storage device like a SATA disk, a USB
+stick or a SD card.
+
+WIC images can be written to a target device using bmaptool. This tool will
+also extract compressed images on the fly while writing:
+
+  # bmaptool copy --bmap kontron-test-image-*.wic.bmap kontron-test-image-*.wic.bz2 TARGET_DEVICE
+
+TARGET_DEVICE is the device node for the device that should contain the image
+(e.g. /dev/sdd for SATA disk and USB stick or /dev/mmcblk0 for an SD card).
+Please double check you are using the correct device as all data on that device
+will be erased.
+
+WIC images may also be written using the dd utility (in Linux) or Image Writer
+(in Windows):
+
+  # dd if=kontron-test-image-*.wic of=TARGET_DEVICE bs=4M
+  # sync
+  # eject TARGET_DEVICE
+
+Note: Compressed images need to be unextracted before being written to a
+      device. For .xz file extensions this can be done with the xz/unxz tool.
+Note: The WIC image will complain about partition table errors when mounted.
+      The reason is that the size of the target storage device is not known at
+      build time. The problem can be fixed with the parted tool or
+      sgdisk -e TARGET_DEVICE after installing the image. The
+      kontron-test-image will do this automatically at first startup.
+
+After writing the image, boot the board from this mass storage device. When
+the boot loader starts, select the boot mode and press ENTER. The system should
+be booted to an Xfce graphical desktop.
+
+To get access to the system via ssh protocol, use the root terminal to find out
+or configure an IP address with the ifconfig command. After that, it will be
+possible to log into the system via ssh as 'root' with empty password.
+
+In case if the image is corrupted after copying it to mass storage device, try
+to clean the whole device by executing on host:
+
+  dd if=/dev/zero of=TARGET_DEVICE bs=1M
+  NOTE: all information on TARGET_DEVICE will be erased!
+
+IV. Installation to persistent storage
+======================================
+
+In order to install Yocto Linux BSP to persistent storage, proceed with the
+following steps:
+
+a. Prepare a HDD or USB storage with at least 8 GB of free space. eMMC device
+   on module can be used too.
+
+b. Boot the board with BSP image from external storage with bootable image (see
+   the previous chapter).
+
+c. When the boot loader starts, select the install mode and press ENTER.
+
+d. The installer starts immediately upon entering the console. Please follow
+   on-screen instructions.
+
+e. After the installation is finished, remove the boot device from the board
+   and reboot it.
+
+f. Use root account with empty password to login.

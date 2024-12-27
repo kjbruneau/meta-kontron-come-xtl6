@@ -1,0 +1,21 @@
+The sources for the packages comprising the images shipped with this BSP can be
+found at the following location:
+
+http://downloads.yoctoproject.org/mirror/sources/
+
+The metadata used to generate the images shipped with this BSP, in addition to
+the code contained in this layer, can be found at the following locations:
+
+http://downloads.yoctoproject.org/releases/yocto/yocto-3.4/poky-f6d1126fff213460dc6954a5d5fc168606d76b66.tar.bz2
+http://downloads.yoctoproject.org/releases/yocto/yocto-3.4/meta-intel-90170cf85fe35b4e8dc00eee50053c0205276b63.tar.bz2
+http://downloads.yoctoproject.org/releases/yocto/yocto-3.4/meta-openembedded-f2152d79043601eacb70da1a3ab36f5ac56f3e28.tar.bz2
+http://git.yoctoproject.org/cgit.cgi/meta-security/snapshot/fb77606aef461910db4836bad94d75758cc2688c.tar.bz2
+https://github.com/kraj/meta-clang/archive/fc5389393adb005b519e488e9e6be4fc5791239c.zip
+
+It is also available in the following git repositories (BRANCH GIT_URL COMMIT):
+
+honister git://git.yoctoproject.org/poky f6d1126fff213460dc6954a5d5fc168606d76b66
+honister git://git.yoctoproject.org/meta-intel 90170cf85fe35b4e8dc00eee50053c0205276b63
+honister git://git.openembedded.org/meta-openembedded f2152d79043601eacb70da1a3ab36f5ac56f3e28
+honister git://git.yoctoproject.org/meta-security fb77606aef461910db4836bad94d75758cc2688c
+honister https://github.com/kraj/meta-clang.git fc5389393adb005b519e488e9e6be4fc5791239c
